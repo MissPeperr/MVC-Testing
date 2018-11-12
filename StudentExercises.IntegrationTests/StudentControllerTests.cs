@@ -77,5 +77,57 @@ namespace StudentExercises.IntegrationTests
                 indexPage.QuerySelectorAll("td"),
                 td => td.TextContent.Contains(slack));
         }
+
+        [Fact]
+        public async Task Post_EditStudent()
+        {
+            // Arrange
+            string studentId = "1";
+            string url = $"/students/edit/{studentId}";
+
+            // fetch the edit page
+            HttpResponseMessage editPageResponse = await _client.GetAsync(url);
+            // convert the page into an HTML object so we can query it
+            IHtmlDocument editPage = await HtmlHelpers.GetDocumentAsync(editPageResponse);
+
+            // query the HTML object we converted
+            IHtmlInputElement firstNameInput = (IHtmlInputElement) editPage.QuerySelector("#student_FirstName");
+            IHtmlInputElement lastNameInput = (IHtmlInputElement) editPage.QuerySelector("#student_LastName");
+            IHtmlInputElement slackInput = (IHtmlInputElement) editPage.QuerySelector("#student_SlackHandle");
+            IHtmlSelectElement cohortSelect = (IHtmlSelectElement) editPage.QuerySelector("#student_CohortId");
+            
+            // set firstName, lastName, slack, and cohortId to the values of the querySelectors
+            string firstName = firstNameInput.Value;
+            string lastName = lastNameInput.Value;
+            string slack = slackInput.Value;
+            string cohortId = cohortSelect.Value;
+
+
+            // Act
+            firstName = firstName + "!!!!";
+            HttpResponseMessage response = await _client.SendAsync(
+            editPage,
+            new Dictionary<string, string>
+            {
+                    {"student_FirstName", firstName},
+                    {"student_LastName", lastName},
+                    {"student_SlackHandle", slack },
+                    {"student_CohortId", cohortId }
+            });
+
+            // Assert
+            response.EnsureSuccessStatusCode();
+
+            IHtmlDocument indexPage = await HtmlHelpers.GetDocumentAsync(response);
+            Assert.Contains(
+                indexPage.QuerySelectorAll("td"),
+                td => td.TextContent.Contains(firstName));
+            //Assert.Contains(
+            //    indexPage.QuerySelectorAll("td"),
+            //    td => td.TextContent.Contains(lastName));
+            //Assert.Contains(
+            //    indexPage.QuerySelectorAll("td"),
+            //    td => td.TextContent.Contains(slack));
+        }
     }
 }
